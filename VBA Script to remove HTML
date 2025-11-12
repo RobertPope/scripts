@@ -1,0 +1,65 @@
+Option Explicit
+
+' Works on both Mac and PC
+' Usage: =removeHTML(G2)
+Function removeHTML(ByVal s As Variant) As String
+    Dim txt As String
+    Dim i As Long
+    Dim arr() As String
+
+    On Error GoTo SafeExit
+    If IsError(s) Or IsEmpty(s) Then
+        removeHTML = ""
+        Exit Function
+    End If
+
+    txt = CStr(s)
+
+    ' Normalize newlines
+    txt = Replace(Replace(txt, vbCrLf, vbLf), vbCr, vbLf)
+
+    ' Replace common HTML line break and block tags with newlines
+    txt = Replace(txt, "<br>", vbLf)
+    txt = Replace(txt, "<br/>", vbLf)
+    txt = Replace(txt, "<br />", vbLf)
+    txt = Replace(txt, "</p>", vbLf)
+    txt = Replace(txt, "</div>", vbLf)
+    txt = Replace(txt, "</li>", vbLf)
+    txt = Replace(txt, "</h1>", vbLf)
+    txt = Replace(txt, "</h2>", vbLf)
+    txt = Replace(txt, "</h3>", vbLf)
+    txt = Replace(txt, "</h4>", vbLf)
+    txt = Replace(txt, "</h5>", vbLf)
+    txt = Replace(txt, "</h6>", vbLf)
+
+    ' Remove everything between <...>
+    Do While InStr(txt, "<") > 0 And InStr(txt, ">") > 0
+        txt = Left$(txt, InStr(txt, "<") - 1) & Mid$(txt, InStr(txt, ">") + 1)
+    Loop
+
+    ' Decode a few common HTML entities
+    txt = Replace(txt, "&nbsp;", " ")
+    txt = Replace(txt, "&amp;", "&")
+    txt = Replace(txt, "&lt;", "<")
+    txt = Replace(txt, "&gt;", ">")
+    txt = Replace(txt, "&quot;", """")
+    txt = Replace(txt, "&#39;", "'")
+
+    ' Split and trim lines
+    arr = Split(txt, vbLf)
+    For i = LBound(arr) To UBound(arr)
+        arr(i) = Trim$(arr(i))
+    Next i
+    txt = Join(arr, vbLf)
+
+    ' Collapse 3+ line breaks into 2
+    Do While InStr(txt, vbLf & vbLf & vbLf) > 0
+        txt = Replace(txt, vbLf & vbLf & vbLf, vbLf & vbLf)
+    Loop
+
+    removeHTML = Trim$(txt)
+    Exit Function
+
+SafeExit:
+    removeHTML = ""
+End Function
